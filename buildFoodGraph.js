@@ -1,24 +1,3 @@
-// var adjList = "[10]
-// [10]
-// [11]
-// [12]
-// [12]
-// [13]
-// [13]
-// [13]
-// [13]
-// [18]
-// [11]
-// [12]
-// [13]
-// [14, 15]
-// [16, 17]
-// [18]
-// [19]
-// []
-// [19]
-// []";
-
 
 var width = window.innerWidth;
 var height = window.innerHeight;
@@ -30,17 +9,15 @@ var force = d3.layout.force()
     .linkDistance(120)
     .size([width, height]);
 
-
-
-
-
-
 var drawGraph = function(graph, depth) {
-
+  
+  // refresh svg layer
+  d3.select("svg").remove();
   var svg = d3.select("body").append("svg")
     .attr("width", width)
     .attr("height", height);
 
+  // code snippet to add arrow
   svg.append("svg:defs").selectAll("marker")
     .data(["end"])      // Different link/path types can be defined here
   .enter().append("svg:marker")    // This section adds in the arrows
@@ -86,16 +63,11 @@ var drawGraph = function(graph, depth) {
 
   force.on("tick", function(e) {
 
-    //     .attr("cy", function(d) { return d.y; });
+    // Force node to reside in columns
     var widthBand = 0.8*width/depth;
-
-    var ky = .1 * e.alpha, kx = .1* e.alpha;
-    // Push nodes toward their designated focus.
     console.log("tick");
     for(var j = 0; j < node.data().length; j++){
-      // console.log(node.data()[j]);
       node.data()[j].x =  widthBand*(node.data()[j].group + 0.2);
-      // link.data()[j].source.y += (link.data()[j].target.y -  link.data()[j].source.y) * ky;
     }
 
     link.attr("x1", function(d) { return d.source.x; })
@@ -112,9 +84,10 @@ var drawGraph = function(graph, depth) {
   });
 };
 
-// drawGraph(graph);
 
-
+// Reverse adj from the data from parse
+// The reversed list has the finished food as root
+// The leaves are ingredients
 
 function reverseAdj(adjList){
   var numNodes = adjList.length;
@@ -141,6 +114,7 @@ function reverseAdj(adjList){
   return {"adj":newAdj, "roots": roots};
 }
 
+// DFS from roots
 function labelLength(rootIndex, adjListRe, nodes ){
   console.log("this root"+rootIndex);
   var edgesFromThisNode = adjListRe[rootIndex];
@@ -152,11 +126,10 @@ function labelLength(rootIndex, adjListRe, nodes ){
       nodes[edgesFromThisNode[i]].group = nodes[rootIndex].group;
       labelLength(edgesFromThisNode[i], adjListRe, nodes);
     }
-
   };
-
 }
 
+// not used
 function labelSibSeparate(nodes, adjList){
   for (var i = 0; i < adjList.length; i++) {
     if (adjList[i].length > 1){
@@ -171,28 +144,31 @@ function labelSibSeparate(nodes, adjList){
   };
 }
 
+
 $(document).ready(function(){
 
   $("#submitButton").click(function (e) {
 
-    d3.select("svg").remove();
-      
-    var lines = $('#inputBox').val().trim().split('\n');
-    var thisLine;
-    var myRegexp = /^\d+\s+\"(.*?)\"/;
+    // build nodes and egdes (for d3 force laye to accept)
+    // build conventional adjList
     nodes = [];
     edges = [];
     adjList = [];
+
+    // regex to obtain the things in "" 
+    var lines = $('#inputBox').val().trim().split('\n');
+    var thisLine;
+    var myRegexp = /^\d+\s+\"(.*?)\"/;
+
+    // parse and build
     for(var i = 0;i < lines.length;i++){
         thisLine = lines[i].trim();
-        // console.log("new:" +thisLine);
         var match = myRegexp.exec(thisLine);
         var ing = match[1];
         var num = thisLine.split(('\"'+ing+'\"'));
         var thisNodeNum = num[0];
         var thisChildrenNum = num[1];
         nodes.push({"name": ing, "group": -1});
-        // console.log(ing);
         var edgesAdjList = []
         if (thisChildrenNum){
           thisChildrenNum = thisChildrenNum.trim();
@@ -202,17 +178,20 @@ $(document).ready(function(){
             edgesAdjList.push(parseInt(childrenList[j]));
           }
         }
-        else{
-          // console.log("no children");
-        }
         adjList.push(edgesAdjList);
     }
+
+    // graph is object format that works with the lib
+    // newAdj is the reverser adjList (roots are finished food)
+    // having the original one help to see when things separate
+    // roots of this reversed list (finished food, or discarded stuff, mislabeled)
+
     var graph = {"nodes": nodes, "links": edges};
     var newAdjRoots = reverseAdj(adjList);
     var newAdj = newAdjRoots.adj;
     var roots = newAdjRoots.roots;
 
-    // label distance
+    // label distance and change the group of the object
     console.log("roots");
     for (var i = 0; i < roots.length; i++) {
       console.log(nodes[roots[i]].name);
@@ -220,11 +199,14 @@ $(document).ready(function(){
     };
 
     // labelSibSeparate(nodes,adjList);
+
     // finding height of the dag
     var depth = -1;
     for (var i = 0; i < nodes.length; i++) {
       if (depth < nodes[i].group) depth = nodes[i].group;
     };
+
+    // draw graph
 
     drawGraph(graph, depth);
 
