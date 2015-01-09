@@ -158,14 +158,16 @@ $(document).ready(function(){
     // regex to obtain the things in "" 
     var lines = $('#inputBox').val().trim().split('\n');
     var thisLine;
-    var myRegexp = /^\d+\s+\"(.*?)\"/;
+    var myRegexp = /\"(.*?)\"/;
 
     // parse and build
     for(var i = 0;i < lines.length;i++){
         thisLine = lines[i].trim();
+        console.log(thisLine);
         var match = myRegexp.exec(thisLine);
+        console.log(match);
         var ing = match[1];
-        var num = thisLine.split(('\"'+ing+'\"'));
+        var num = thisLine.split(match[0]);
         var thisNodeNum = num[0];
         var thisChildrenNum = num[1];
         nodes.push({"name": ing, "group": -1});

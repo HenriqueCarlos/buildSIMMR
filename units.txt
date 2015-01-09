@@ -1,0 +1,16 @@
+teaspoon, t, tsp., tsp
+tablespoon, T, tbl., tbl, tbs., tbs, tbsp., tbsp
+fluid ounce, fl oz
+gill
+cup, c
+pint, p, pt, fl pt
+quart, q, qt, fl qt
+gallon, g, gal
+ml, milliliter, millilitre, cc, mL
+l, liter, litre, L
+dl, decilitre, dL
+pound, lb
+ounce, oz
+mg, milligram, milligramme
+g, gram, gramme
+kg, kilogram, kilogramme
