@@ -29,22 +29,35 @@ def checkNGramMatch(myStem, sentence, wordlist):
     allWordList = []
     
     for n in range(maxLenToken,0,-1):
-#         print "thisN:", n
+        # print "thisN:", n
         thisGramSentence = [each for each in ngrams(sentenceTokenList, n)]
-#         print "thisSentence:", thisGramSentence
+        # print "thisSentence:", thisGramSentence
         wordListGram = [ [e for e in ngrams(each,n)] for each in tokenList]
-#         print "wordList:", wordListGram
+        # print "wordList:", wordListGram
         wordListFoundThisLevel = []
+        toBeReplacedWhenFound = []
         for i in range(len(thisGramSentence)):
             
             for j in range(len(wordListGram)):
                 for k in range(len(wordListGram[j])):
                         if (wordListGram[j][k] == thisGramSentence[i]):
                             if (j not in allWordList):
-#                                 print (thisGramSentence[i]), "at word", j  
+                                # print (thisGramSentence[i]), "at word", j  
                                 matches.append((thisGramSentence[i],n,i,j,k))
-#                                 gramAndPos.append((n,i,j,k))
+                                # gramAndPos.append((n,i,j,k))
                                 wordListFoundThisLevel.append(j)
+                                toBeReplacedWhenFound.append((thisGramSentence[i],n,i,j,k))
+
+        for eachMatched in toBeReplacedWhenFound:
+            # print eachMatched
+            ii = eachMatched[2]
+            iiN = eachMatched[1]+ii
+            # print sentenceTokenList[ii:iiN]
+            for replaceI in range(ii,iiN):
+                sentenceTokenList[replaceI] = "?"
+            # replacing = " ".join(["?" for ii in range(thisLen)])
+            # replaced = " ".join(list(eachMatched))
+
         
         allWordList += wordListFoundThisLevel
     

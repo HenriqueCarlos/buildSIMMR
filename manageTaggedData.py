@@ -36,6 +36,7 @@ def getOneToOneMatch(originalTexts,annotations, listOfFuncs):
     dictTexts = {}
     originTextUnique = []
     for i, each in enumerate(originalTexts):
+        each = each.rstrip()
         if each in dictTexts.keys():
             for eachF in listOfFuncs:
                 if eachF(annotations[i]):
@@ -74,6 +75,8 @@ commndMix = "mix("
 commndCook = "cook("
 commndDo = "do("
 
+commndPut = "put("
+
 def checkCommnd(text, commndKey):
 
     return text[:len(commndKey)] == commndKey
@@ -101,6 +104,10 @@ def isCook(text):
 
 def isDo(text):
     return checkCommnd(text,commndDo)
+
+def isPut(text):
+    return checkCommnd(text,commndPut)
+
 
 def isGeneral(text):
     return True
