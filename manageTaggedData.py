@@ -1,5 +1,7 @@
 import xml.etree.ElementTree as ET
-
+from food import Food
+from ingMap import IngMap
+from getLabel import buildGraph
 
 def getRoot(fileDirectory, fileName):
     return ET.parse(fileDirectory+fileName).getroot()
@@ -14,9 +16,16 @@ def getXandY(recipeFile):
 
     for child in root:
         # get annotations
-        annotations.append(child.find('annotation').text)
+
+        ann = child.find('annotation').text
+        ann = ann.encode('ascii','ignore')
+        ann = ann.decode('unicode_escape').encode('ascii','ignore')
+        annotations.append(ann)
         # get unique texts
-        originalTexts.append(child.find('originaltext').text)
+        oriTxt = child.find('originaltext').text
+        oriTxt = oriTxt.encode('ascii','ignore')
+        oriTxt = oriTxt.decode('unicode_escape').encode('ascii','ignore')
+        originalTexts.append(oriTxt)
 
     return originalTexts, annotations
 
@@ -132,12 +141,61 @@ def getIngNum(text):
     # process getIng Args
 def preProcessIngArgs(text):
     
-    punctuationWithoutCom = ['!', '#', '"', '%', '$', "'", '&', ')', '(', '+', '*', '/', '.', ';', ':', '=', '<', '?', '>', '@', '[', ']', '\\', '_', '^', '`', '{', '}', '|', '~']
 
     ingArg = getArgs(text)
     ingAndDesc = ingArg.split(',')
     ingNo = getIngNum(ingAndDesc[0])
     # put ingredients back into string
     ingString = ','.join(ingAndDesc[1:])
-    ingString = ''.join(ch for ch in ingString if ch not in punctuationWithoutCom)
+    ingString = cleanPunc(ingString)
+
     return ingNo, ingString
+
+def cleanPunc(text):
+    punctuationWithoutCom = ['!', '#', '"', '%', '$', "'", '&', ')', '(', '+', '*', '/', '.', ';', ':', '=', '<', '?', '>', '@', '[', ']', '\\', '_', '^', '`', '{', '}', '|', '~']
+    text = ''.join(ch for ch in text if ch not in punctuationWithoutCom)
+
+    return text
+
+def processLabeledData(filename):
+    
+    ingredientMap = IngMap()
+    Food.foodCount = 0
+    Food.ingCount = 0    
+    
+    ## get instructions with original ingredients
+    instrctXWithOri, ingredientMap, links = buildGraph(ingredientMap,filename)
+    
+    ## get standard instruction number labeled
+    x, y = getXandY(filename)
+    xIng, xRem, yRem = separateIngInstruct(x,y)
+    xInstructNumb, yInstructNumb = getOneToOneMatch(xRem,yRem, [isGeneral])
+
+    numberedInstruct = {}
+    for i, each in enumerate(xInstructNumb):
+        numberedInstruct[each] = i
+    
+    numberedInstrctXWithOri = {}
+    
+    previousInstructX = instrctXWithOri[0][0].rstrip()
+    collectIng = []
+    collectTag = []
+    for each in instrctXWithOri:
+        instrctX = each[0].rstrip()
+        oriIng = each[1]
+        label = oriIng[0]
+        if (previousInstructX == instrctX):
+            collectIng += oriIng[1]
+            collectTag.append(oriIng[0])
+        else:
+            whichNum = numberedInstruct[previousInstructX]
+            numberedInstrctXWithOri[whichNum] = (previousInstructX, collectTag, collectIng)
+
+            previousInstructX = instrctX
+            collectIng = oriIng[1]
+            collectTag = [oriIng[0]]
+
+    whichNum = numberedInstruct[previousInstructX]
+    numberedInstrctXWithOri[whichNum] = (previousInstructX, collectTag, collectIng)
+    
+    return numberedInstrctXWithOri , ingredientMap, links

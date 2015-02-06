@@ -101,6 +101,24 @@ def getOriginWordFromSentence(sentence, listpositions):
         (n,i,j,k) = each
         originWord.append(" ".join(sentenceToken[i:i+n]))
     return originWord
+
+def getBeforeAfterWord(sentence, listpositions):
+
+    before = []
+    after = []
+    sentenceToken = word_tokenize(sentence)
+    for each in listpositions:
+        (n,i,j,k) = each
+        if (i>0):
+            before.append(sentenceToken[i-1])
+        else:
+            before.append("")
+
+        if (i+n < len(sentenceToken)):
+            after.append(sentenceToken[i+n])
+        else:
+            after.append("")
+    return before, after
     
 def getAllNGrams(word):
     tokenList = word_tokenize(word)
